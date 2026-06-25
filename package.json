@@ -1,0 +1,28 @@
+{
+  "name": "erp-all-projects-runner",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "fico-backend": "npm --prefix fico/accounting/backend run dev",
+    "fico-frontend": "npm --prefix fico/accounting/frontend start",
+    "fico-db4-backend": "npm --prefix fico/DB4_people-main/backend run dev",
+    "fico-db4-frontend": "npm --prefix fico/DB4_people-main/frontend start",
+    "start:fico": "concurrently \"npm run fico-backend\" \"npm run fico-frontend\" \"npm run fico-db4-backend\" \"npm run fico-db4-frontend\"",
+    "mm-core": "concurrently \"npm --prefix mm/core/backend run dev\" \"npm --prefix mm/core/frontend start\"",
+    "mm-creation": "concurrently \"npm --prefix mm/creation/backend run dev\" \"npm --prefix mm/creation/frontend start\"",
+    "mm-inspection": "concurrently \"npm --prefix mm/inspection/backend run dev\" \"npm --prefix mm/inspection/frontend start\"",
+    "mm-production": "concurrently \"npm --prefix mm/production/backend run dev\" \"npm --prefix mm/production/frontend start\"",
+    "mm-quality": "concurrently \"npm --prefix mm/quality/backend run dev\" \"npm --prefix mm/quality/frontend start\"",
+    "mm-warehouse": "concurrently \"npm --prefix mm/warehouse/backend run dev\" \"npm --prefix mm/warehouse/frontend start\"",
+    "start:mm": "concurrently \"npm run mm-core\" \"npm run mm-creation\" \"npm run mm-inspection\" \"npm run mm-production\" \"npm run mm-quality\" \"npm run mm-warehouse\"",
+    "sd-delivery": "concurrently \"npm --prefix sd/delivery/backend run dev\" \"npm --prefix sd/delivery/frontend start\"",
+    "sd-sales-flow": "concurrently \"npm --prefix sd/sales-flow/backend run dev\" \"npm --prefix sd/sales-flow/frontend start\"",
+    "sd-sales-order": "concurrently \"npm --prefix sd/sales-order/backend run dev\" \"npm --prefix sd/sales-order/frontend start\"",
+    "sd-stock": "concurrently \"npm --prefix sd/sales-distribution-stock/backend run dev\" \"npm --prefix sd/sales-distribution-stock/frontend start\"",
+    "start:sd": "concurrently \"npm run sd-delivery\" \"npm run sd-sales-flow\"  \"npm run sd-stock\"",
+    "start:all": "concurrently \"npm run start:fico\" \"npm run start:mm\" \"npm run start:sd\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

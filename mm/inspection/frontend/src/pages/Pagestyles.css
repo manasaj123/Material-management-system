@@ -1,0 +1,491 @@
+/* Styles for QC Dashboard Page */
+/* Page layout */
+.qc-dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main content */
+.qc-dashboard-content {
+  flex: 1;
+   background-image: linear-gradient(to right, #e0f2fe, #f0e8c8, #f8c5f7);
+}
+
+/* Inner section */
+.qc-dashboard-body {
+  padding: 20px;
+}
+
+.qc-dashboard-desc {
+  color: #4b5563;
+  font-size: 30px;
+}
+
+/* Cards layout */
+.qc-dashboard-cards {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Card */
+.dashboard-card {
+  background: #f5d1ef;
+  padding: 20px;
+  border-radius: 8px;
+  width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card h4 {
+  margin-bottom: 10px;
+  color: #4a6397;
+  font-size: 20px;
+}
+
+.dashboard-card p {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* Styles for QC Lots Page */
+/* Page layout */
+.qc-lots-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Right content */
+.qc-lots-content {
+  flex: 1;
+  background-image: linear-gradient(to right, #e0f2fe, #f0e8c8, #f8c5f7);
+}
+
+/* Inner body */
+.qc-lots-body {
+  padding: 16px;
+  font-size: 13px;
+}
+
+/* Create lot card */
+.create-lot-card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.create-lot-card h3 {
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+/* AuditReportsPage.css */
+/* Page layout */
+.qc-audit-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Right content */
+.qc-audit-content {
+  flex: 1;
+  background-image: linear-gradient(to right, #e0f2fe, #f0e8c8, #f8c5f7);
+}
+
+/* Inner section */
+.qc-audit-body {
+  padding: 20px;
+}
+
+/* Table styling */
+.qc-audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f6dbf6;
+  font-size: 14px;
+  color: #020249;
+  font-weight: bold;
+  font-family: 'italic';
+}
+
+/* Table header */
+.qc-audit-table thead {
+  background: #f8c7f4;
+  color: #040e5c;
+  font-weight: bolder;
+  font-size: larger;
+}
+
+.qc-audit-table th,
+.qc-audit-table td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  text-align: left;
+}
+
+/* Empty row */
+.qc-audit-empty {
+  text-align: center;
+  color: #747e94;
+}
+
+/* Decision colors */
+.qc-decision-APPROVED {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.qc-decision-REJECTED {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.qc-decision-PENDING {
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* Styles for Master Inspection Page */
+
+/* ============================= */
+/* MASTER INSPECTION PAGE STYLE  */
+/* ============================= */
+
+.qc-master-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Right side content */
+.qc-master-content {
+  flex: 1;
+  background-image: linear-gradient(to right, #e0f2fe, #f0e8c8, #f8c5f7);
+}
+
+/* Body layout (FORM TOP - TABLE BELOW) */
+.qc-master-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;   /* 🔥 Vertical layout */
+  gap: 20px;
+}
+
+/* ================= FORM CARD ================= */
+
+.qc-master-form-card {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+  width: 98%;   /* Full width */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.qc-master-form-card h3 {
+  margin-bottom: 15px;
+  color: #1e3a8a;
+  font-size: 18px;
+}
+
+/* Form layout */
+.qc-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+/* Each field */
+.form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row label {
+  font-size: 13px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-row input,
+.form-row select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Submit button full width */
+.form-row-full {
+  grid-column: span 3;
+}
+
+.form-row-full button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.form-row-full button:hover {
+  background-color: #1e40af;
+}
+
+/* ================= LIST SECTION ================= */
+
+.qc-master-list {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.qc-master-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.qc-master-list-header h3 {
+  color: #1e3a8a;
+  font-size: 18px;
+}
+
+.qc-master-list-header button {
+  padding: 6px 12px;
+  background-color: #012195;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.qc-master-list-header button:hover {
+  background-color: #7e22ce;
+}
+
+/* ================= TABLE ================= */
+
+.qc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.qc-table thead {
+  background: #f3e8ff;
+}
+
+.qc-table th,
+.qc-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  text-align: center;
+}
+
+.qc-table th {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Hide ID column */
+.col-id {
+  display: none;
+}
+
+/* Hover row effect */
+.qc-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
+.action-edit {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  margin-right: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-delete {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-restore {
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  margin-right: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-hard-delete {
+  background-color: #a80303;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-edit:hover { background-color: #059669; }
+.action-delete:hover { background-color: #dc2626; }
+.action-restore:hover { background-color: #0284c7; }
+.action-hard-delete:hover { background-color: #6e1201; }
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 900px) {
+  .qc-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row-full {
+    grid-column: span 1;
+  }
+}
+
+/* Extra styling for Sampling Procedure inspection points block */
+.radio-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #f9fafb;
+}
+
+.radio-group-vertical label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Better styling for Inspection Points radio group */
+.form-row-inspection-points {
+  grid-column: span 3;              /* full width row in the grid */
+}
+
+.radio-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #f9fafb;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.radio-option input[type="radio"] {
+  accent-color: #2563eb; /* modern browsers */
+}
+
+.radio-group-horizontal {
+  display: flex;
+  flex-wrap: wrap;   /* all in one row, wraps only on very small screens */
+  gap: 6px;
+}
+
+.radio-option-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 13px;
+  color: #374151;
+}
+
+
+/* 2-column form layout for QC master pages */
+.qc-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+/* Full-width row */
+.form-row-full {
+  grid-column: span 2;
+}
+
+/* Single-row inspection points radios */
+.radio-group-horizontal {
+  display: flex;
+  flex-wrap: wrap;   /* will wrap only on very small screens */
+  gap: 16px;
+}
+
+.radio-option-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.radio-option-inline input[type="radio"] {
+  accent-color: #2563eb;
+}
+
+/* Responsive: one column on small screens */
+@media (max-width: 900px) {
+  .qc-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row-full {
+    grid-column: span 1;
+  }
+}
+
+.radio-group-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.radio-option-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.btn {
+  display: flex;
+  gap: 8px;
+}

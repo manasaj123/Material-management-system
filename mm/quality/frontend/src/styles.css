@@ -1,0 +1,101 @@
+/* Layout */
+.qc-page {
+  padding: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+/* Dashboard */
+.qc-dashboard {
+  padding: 16px;
+}
+
+.qc-dashboard h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.qc-dashboard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.qc-dashboard li {
+  margin-bottom: 6px;
+}
+
+/* Links */
+.qc-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.qc-link:hover {
+  text-decoration: underline;
+}
+
+/* Tables */
+.qc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.qc-th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.qc-td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Inputs */
+.qc-input,
+.qc-select,
+.qc-textarea {
+  padding: 4px 6px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+.qc-textarea {
+  width: 100%;
+}
+
+/* Section titles */
+.qc-section-title {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Buttons */
+.qc-button {
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #2563eb;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.qc-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.qc-button-secondary {
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  cursor: pointer;
+}

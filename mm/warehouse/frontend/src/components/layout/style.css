@@ -1,0 +1,146 @@
+/* Layout CSS - imported by all layout components 
+.sidebar {
+  width: 250px;
+  background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+  color: white;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 60px;
+  padding-top: 20px;
+  overflow-y: auto;
+}
+
+.navbar {
+  background: linear-gradient(90deg, #34495e 0%, #2c3e50 100%);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.main-content {
+  display: flex;
+  margin-left: 250px;
+  min-height: 100vh;
+}
+
+.page-content {
+  flex: 1;
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.nav-link {
+  color: #ecf0f1;
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: #3498db;
+  color: white;
+  transform: translateX(5px);
+}
+
+.nav-item.active {
+  background: #3498db;
+  border-right: 4px solid #2980b9;
+}
+*/
+
+
+/* ===== Sidebar Layout ===== */
+/* ====== Layout Reset ====== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6f9;
+}
+
+/* ====== Navbar ====== */
+.navbar {
+  height: 60px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  z-index: 10;
+}
+
+.nav-brand h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-logout {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ====== Sidebar ====== */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #1f2937;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding-top: 20px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-link {
+  padding: 14px 20px;
+  color: #cbd5e1;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  transition: background 0.3s;
+}
+
+.nav-link:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.nav-link.active {
+  background: #2563eb;
+  color: #fff;
+}

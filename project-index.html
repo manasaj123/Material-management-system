@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Db4hub</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background: linear-gradient(270deg,#dbeafe,#b0ddfa,#c9faf8,#c5dbf9,#dbeafe,#95f6f9,#c9faf8,#c5dbf9);
+background-size:600% 600%;
+animation:gradientMove 5s ease infinite;
+min-height:100vh;
+}
+
+@keyframes gradientMove{
+0%{ background-position:0% 50%; }
+50%{ background-position:100% 50%; }
+100%{ background-position:0% 50%; }
+}
+
+.header{
+background:#111827;
+color:white;
+padding:10px 25px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.title{
+font-style: italic;
+font-size:28px;
+font-weight:700;
+letter-spacing:1px;
+background:linear-gradient(45deg,#4c9cfd,#38bdf8,#22c55e);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+text-shadow:0 3px 6px rgba(0,0,0,0.2);
+}
+
+.home{
+padding:8px 10px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+display:none;
+}
+
+.main{
+padding:15px;
+}
+
+.module-title{
+font-family:'Courier New', Courier, monospace;
+font-size:22px;
+margin-left:10px;
+margin-top:25px;
+margin-bottom:15px;
+font-weight:800;
+border-left:4px solid #2563eb;
+padding-left:5px;
+color:#430501;
+}
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:15px;
+}
+
+.card{
+background:linear-gradient(135deg,#ffffff,#f8fafc,#c9fcfe);
+padding:18px;
+text-align:center;
+border-radius:10px;
+cursor:pointer;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:0.35s;
+border:1px solid rgba(0,0,0,0.05);
+}
+
+.card img{
+width:35px;
+height:25px;
+margin-bottom:10px;
+}
+
+.card:hover{
+background:linear-gradient(135deg,#9bc5fc,#7689a7);
+color:white;
+transform:translateY(-5px) scale(1.02);
+box-shadow:0 12px 20px rgba(0,0,0,0.25);
+}
+
+.card div{
+font-size:17px;
+font-weight:700;
+font-family:Georgia,'Times New Roman',Times,serif;
+color:#082482;
+letter-spacing:0.5px;
+}
+
+iframe{
+width:100%;
+height:calc(100vh - 60px);
+border:none;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="title">Db4hub</div>
+<button class="home" id="homeBtn" onclick="goHome()">🏠Home</button>
+</div>
+
+<div class="main" id="dashboard">
+
+<!-- FICO -->
+
+<div class="module-title">FICO</div>
+
+<div class="dashboard">
+
+<div class="card" onclick="openProject('http://localhost:3010')">
+<img src="https://cdn-icons-png.flaticon.com/512/3135/3135679.png">
+<div>Accounting</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3000')">
+<img src="https://cdn-icons-png.flaticon.com/512/921/921347.png">
+<div>DB4 People</div>
+</div>
+
+</div>
+
+<!-- MM -->
+
+<div class="module-title">MM</div>
+
+<div class="dashboard">
+
+<div class="card" onclick="openProject('http://localhost:3001')">
+<img src="https://cdn-icons-png.flaticon.com/512/1048/1048949.png">
+<div>Core</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3002')">
+<img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png">
+<div>Creation</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3003')">
+<img src="https://cdn-icons-png.flaticon.com/512/622/622669.png">
+<div>Inspection</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3004')">
+<img src="https://cdn-icons-png.flaticon.com/512/679/679720.png">
+<div>Production</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3005')">
+<img src="https://cdn-icons-png.flaticon.com/512/190/190411.png">
+<div>Quality</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3006')">
+<img src="https://cdn-icons-png.flaticon.com/512/684/684908.png">
+<div>Warehouse</div>
+</div>
+
+</div>
+
+<!-- SD -->
+
+<div class="module-title">SD</div>
+
+<div class="dashboard">
+
+<div class="card" onclick="openProject('http://localhost:3007')">
+<img src="https://cdn-icons-png.flaticon.com/512/1995/1995470.png">
+<div>Delivery</div>
+</div>
+
+<div class="card" onclick="openProject('http://localhost:3008')">
+<img src="https://cdn-icons-png.flaticon.com/512/2920/2920349.png">
+<div>Sales Flow</div>
+</div>
+
+
+
+<div class="card" onclick="openProject('http://localhost:3012')">
+<img src="https://cdn-icons-png.flaticon.com/512/2331/2331970.png">
+<div>Sales Distribution Stock</div>
+</div>
+
+</div>
+
+</div>
+
+<iframe id="frame"></iframe>
+
+<script>
+
+const frame=document.getElementById("frame");
+const dashboard=document.getElementById("dashboard");
+const homeBtn=document.getElementById("homeBtn");
+
+function openProject(url){
+dashboard.style.display="none";
+frame.style.display="block";
+frame.src=url;
+homeBtn.style.display="inline-block";
+}
+
+function goHome(){
+frame.style.display="none";
+dashboard.style.display="block";
+homeBtn.style.display="none";
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+.pp-app {
+  font-family: Arial, sans-serif;
+  display: flex;
+  height: 100vh;
+}
+
+
+.pp-nav {
+  background: #0f766e;
+  color: #fff;
+  width: 180px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.pp-logo {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.pp-nav a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.pp-nav a:hover {
+  background: #115e57;
+}
+
+
+.pp-main {
+  flex: 1;
+  padding: 12px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.pp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.pp-table th,
+.pp-table td {
+  border: 1px solid #ddd;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.pp-table th {
+  background: #f3f4f6;
+}
+
+button {
+  font-size: 13px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.pp-metrics p {
+  margin: 4px 0;
+}
