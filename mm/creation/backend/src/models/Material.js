@@ -1,30 +1,28 @@
 import db from "../config/db.js";
 
-const PLANT_CODE = "DB4"; // same idea as DB4-INV
+const PLANT_CODE = "DB4";
 
-// helper: generate material_number DB4-MAT-001, DB4-MAT-002, ...
-const generateMaterialNumber = async () => {
+const generatePartNumber = async () => {
   const [rows] = await db.query(
-    "SELECT material_number FROM materials WHERE material_number LIKE ? ORDER BY id DESC LIMIT 1",
-    [`${PLANT_CODE}-MAT-%`],
+    "SELECT part_number FROM materials WHERE part_number LIKE ? ORDER BY id DESC LIMIT 1",
+    [`${PLANT_CODE}-%`]
   );
 
   let nextSeq = 1;
-  if (rows.length > 0 && rows[0].material_number) {
-    const parts = String(rows[0].material_number).split("-");
+  if (rows.length > 0 && rows[0].part_number) {
+    const parts = String(rows[0].part_number).split("-");
     const lastSeq = parseInt(parts[parts.length - 1], 10);
     if (!isNaN(lastSeq)) {
       nextSeq = lastSeq + 1;
     }
   }
 
-  const seqStr = String(nextSeq).padStart(3, "0"); // 001, 002, 003
-  return `${PLANT_CODE}-MAT-${seqStr}`;
+  const seqStr = String(nextSeq).padStart(3, "0");
+  return `${PLANT_CODE}-${seqStr}`;
 };
 
 export const Material = {
   findAll() {
-    // qty will be included because we use *
     return db.query("SELECT * FROM materials ORDER BY id DESC");
   },
 
@@ -32,132 +30,120 @@ export const Material = {
     return db.query("SELECT * FROM materials WHERE id = ?", [id]);
   },
 
-  // NEW method
-  async findByNameExcludingId(name, excludeId) {
+  // FIXED: Destructure the rows from the query result
+  async findByName(name) {
+    console.log('🔍 [findByName] Looking for:', name);
     const [rows] = await db.query(
-      "SELECT id FROM materials WHERE name = ? AND id != ?",
-      [name, excludeId],
+      "SELECT id, part_name FROM materials WHERE part_name = ?", 
+      [name]
     );
-    return rows; // empty array if no duplicate
+    console.log('🔍 [findByName] Found:', rows.length, 'records');
+    return rows;
   },
 
-  // auto-generate material_number, ignore value from body
+  // FIXED: Destructure the rows from the query result
+  async findByNameExcludingId(name, excludeId) {
+    console.log('🔍 [findByNameExcludingId] Looking for:', name, 'excluding ID:', excludeId);
+    const [rows] = await db.query(
+      "SELECT id, part_name FROM materials WHERE part_name = ? AND id != ?", 
+      [name, excludeId]
+    );
+    console.log('🔍 [findByNameExcludingId] Found:', rows.length, 'records');
+    return rows;
+  },
+
   async create(data) {
-    const material_number = await generateMaterialNumber();
+    const part_number = await generatePartNumber();
 
     return db.query(
       `INSERT INTO materials (
-  material_number, industry_sector, material_type, material_group,
-  storage_type, warehouse_number, sales_org, storage_location,
-  distribution_channel, gross_weight, net_weight, name, uom,
-  shelf_life_days, valuation_method, issue_type, perishable, qty,
-  batch_number, expiry_date
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        part_number, part_name, material_name, material_code,
+        material_type, job_work_category, uom, color_code,
+        part_weight, received_date, storage_location,
+        coil_number, heat_number, shelf_life_days, status, qty
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        material_number,
-        data.industry_sector || null,
-        data.material_type || null,
-        data.material_group || null,
-        data.storage_type || null,
-        data.warehouse_number || null,
-        data.sales_org || null,
-        data.storage_location || null,
-        data.distribution_channel || null,
-        data.gross_weight ?? null,
-        data.net_weight ?? null,
-        data.name,
+        part_number,
+        data.part_name,
+        data.material_name,
+        data.material_code || null,
+        data.material_type,
+        data.job_work_category || null,
         data.uom,
+        data.color_code || null,
+        data.part_weight ?? null,
+        data.received_date || null,
+        data.storage_location,
+        data.coil_number || null,
+        data.heat_number || null,
         data.shelf_life_days ?? 0,
-        data.valuation_method || "MOVING_AVG",
-        data.issue_type || "FIFO",
-        data.perishable ? 1 : 0,
-        data.qty ?? null, // NEW: save qty
-        data.batch_number || "", // ← add this
-        data.expiry_date || null,
-      ],
+        data.status || "Active",
+        data.qty ?? null,
+      ]
     );
   },
 
   update(id, data) {
     return db.query(
       `UPDATE materials SET
-        material_number       = ?,
-        industry_sector       = ?,
-        material_type         = ?,
-        material_group        = ?,
-        storage_type          = ?,
-        warehouse_number      = ?,
-        sales_org             = ?,
-        storage_location      = ?,
-        distribution_channel  = ?,
-        gross_weight          = ?,
-        net_weight            = ?,
-        name                  = ?,
-        uom                   = ?,
-        shelf_life_days       = ?,
-        valuation_method      = ?,
-        issue_type            = ?,
-        perishable            = ?,
-        qty                   = ?,
-        batch_number          = ?,
-        expiry_date           = ?
-        
+        part_name = ?,
+        material_name = ?,
+        material_code = ?,
+        material_type = ?,
+        job_work_category = ?,
+        uom = ?,
+        color_code = ?,
+        part_weight = ?,
+        received_date = ?,
+        storage_location = ?,
+        coil_number = ?,
+        heat_number = ?,
+        shelf_life_days = ?,
+        status = ?,
+        qty = ?
       WHERE id = ?`,
       [
-        data.material_number, // keep existing on edit
-        data.industry_sector || null,
-        data.material_type || null,
-        data.material_group || null,
-        data.storage_type || null,
-        data.warehouse_number || null,
-        data.sales_org || null,
-        data.storage_location || null,
-        data.distribution_channel || null,
-        data.gross_weight ?? null,
-        data.net_weight ?? null,
-        data.name,
+        data.part_name,
+        data.material_name,
+        data.material_code || null,
+        data.material_type,
+        data.job_work_category || null,
         data.uom,
+        data.color_code || null,
+        data.part_weight ?? null,
+        data.received_date || null,
+        data.storage_location,
+        data.coil_number || null,
+        data.heat_number || null,
         data.shelf_life_days ?? 0,
-        data.valuation_method || "MOVING_AVG",
-        data.issue_type || "FIFO",
-        data.perishable ? 1 : 0,
-        data.qty ?? null, // NEW: update qty
-        data.batch_number || "", // ← batch number value
-        data.expiry_date || null, // ← expiry date value
+        data.status || "Active",
+        data.qty ?? null,
         id,
-      ],
+      ]
     );
   },
 
-  // safe delete: block when used in PR / PO items
   async remove(id) {
-    // check PR usage
     const [prRows] = await db.query(
       "SELECT COUNT(*) AS cnt FROM pr_items WHERE material_id = ?",
-      [id],
+      [id]
     );
     if (prRows[0].cnt > 0) {
-      const err = new Error(
-        "Cannot delete material: it is used in Purchase Requisitions",
-      );
+      const err = new Error("Cannot delete material: it is used in Purchase Requisitions");
       err.code = "MATERIAL_IN_USE_PR";
       throw err;
     }
 
-    // check PO usage
     const [poRows] = await db.query(
       "SELECT COUNT(*) AS cnt FROM po_items WHERE material_id = ?",
-      [id],
+      [id]
     );
     if (poRows[0].cnt > 0) {
-      const err = new Error(
-        "Cannot delete material: it is used in Purchase Orders",
-      );
+      const err = new Error("Cannot delete material: it is used in Purchase Orders");
       err.code = "MATERIAL_IN_USE_PO";
       throw err;
     }
 
-    // if safe, delete
     return db.query("DELETE FROM materials WHERE id = ?", [id]);
   },
 };

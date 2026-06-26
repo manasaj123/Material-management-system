@@ -80,25 +80,21 @@ const asteriskStyle = {
 };
 
 const getDefaultFormState = () => ({
-  material_number: "",
-  industry_sector: "",
+  part_number: "",
+  part_name: "",
+  material_name: "",
+  material_code: "",
   material_type: "",
-  material_group: "",
-  storage_type: "",
-  warehouse_number: "",
-  sales_org: "",
-  storage_location: "",
-  distribution_channel: "",
-  gross_weight: "",
-  net_weight: "",
-  name: "",
-  batch_number: "",
+  job_work_category: "",
   uom: "KG",
+  color_code: "",
+  part_weight: "",
+  received_date: "",
+  storage_location: "RM Storage",
+  coil_number: "",
+  heat_number: "",
   shelf_life_days: "",
-  expiry_date: "",
-  valuation_method: "MOVING_AVG",
-  issue_type: "FIFO",
-  perishable: false,
+  status: "Active",
   qty: "",
 });
 
@@ -106,9 +102,12 @@ export default function MaterialForm({
   onSave,
   editingMaterial,
   onCancelEdit,
+  materials = [],
+  isSaving = false, 
 }) {
   const [form, setForm] = useState(getDefaultFormState);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const safeString = useCallback((val) => {
     if (val === null || val === undefined || val === "") return "";
@@ -118,27 +117,22 @@ export default function MaterialForm({
   useEffect(() => {
     if (editingMaterial) {
       setForm({
-        material_number: safeString(editingMaterial.material_number),
-        industry_sector: safeString(editingMaterial.industry_sector),
+        part_number: safeString(editingMaterial.part_number),
+        part_name: safeString(editingMaterial.part_name),
+        material_name: safeString(editingMaterial.material_name),
+        material_code: safeString(editingMaterial.material_code),
         material_type: safeString(editingMaterial.material_type),
-        material_group: safeString(editingMaterial.material_group),
-        storage_type: safeString(editingMaterial.storage_type),
-        warehouse_number: safeString(editingMaterial.warehouse_number),
-        sales_org: safeString(editingMaterial.sales_org),
-        storage_location: safeString(editingMaterial.storage_location),
-        distribution_channel: safeString(editingMaterial.distribution_channel),
-        gross_weight: safeString(editingMaterial.gross_weight),
-        net_weight: safeString(editingMaterial.net_weight),
-        name: safeString(editingMaterial.name),
+        job_work_category: safeString(editingMaterial.job_work_category),
         uom: safeString(editingMaterial.uom) || "KG",
+        color_code: safeString(editingMaterial.color_code),
+        part_weight: safeString(editingMaterial.part_weight),
+        received_date: safeString(editingMaterial.received_date),
+        storage_location: safeString(editingMaterial.storage_location) || "RM Storage",
+        coil_number: safeString(editingMaterial.coil_number),
+        heat_number: safeString(editingMaterial.heat_number),
         shelf_life_days: safeString(editingMaterial.shelf_life_days),
-        valuation_method:
-          safeString(editingMaterial.valuation_method) || "MOVING_AVG",
-        issue_type: safeString(editingMaterial.issue_type) || "FIFO",
-        perishable: !!editingMaterial.perishable,
+        status: safeString(editingMaterial.status) || "Active",
         qty: safeString(editingMaterial.qty),
-        batch_number: safeString(editingMaterial.batch_number),
-        expiry_date: safeString(editingMaterial.expiry_date),
       });
     } else {
       setForm(getDefaultFormState());
@@ -147,65 +141,39 @@ export default function MaterialForm({
   }, [editingMaterial, safeString]);
 
   // Validation functions
-  const validateName = (name) => {
-    if (!name || name.trim() === "") return "Material name is required";
-    const nameRegex = /^[A-Za-z0-9\s]+$/; // ← allow numbers
-    if (!nameRegex.test(name))
-      return "Name can only contain letters, numbers and spaces";
+  const validatePartName = (value) => {
+    if (!value || value.trim() === "") return "Part Name is required";
+    if (value.length > 200) return "Part Name must be less than 200 characters";
     return "";
   };
 
-  const validateUOM = (uom) => {
-    if (!uom) return "Unit of Measurement is required";
+  const validateMaterialName = (value) => {
+    if (!value || value.trim() === "") return "Material Name is required";
+    if (value.length > 200) return "Material Name must be less than 200 characters";
     return "";
   };
 
-  const validateMaterialGroup = (group) => {
-    if (!group || group.trim() === "") return "";
-    const groupRegex = /^[A-Za-z\s]+$/;
-    if (!groupRegex.test(group))
-      return "Material group should only contain letters and spaces";
+  const validateMaterialType = (value) => {
+    if (!value) return "Material Type is required";
     return "";
   };
 
-  const validateWarehouseNumber = (warehouse) => {
-    if (!warehouse || warehouse.trim() === "") return "";
-    const warehouseRegex = /^[A-Za-z0-9\s]+$/;
-    if (!warehouseRegex.test(warehouse))
-      return "Warehouse number should only contain letters, numbers and spaces";
+  const validateUOM = (value) => {
+    if (!value) return "UOM is required";
     return "";
   };
 
-  const validateSalesOrg = (salesOrg) => {
-    if (!salesOrg || salesOrg.trim() === "") return "";
-    const salesRegex = /^[A-Za-z0-9\s]+$/;
-    if (!salesRegex.test(salesOrg))
-      return "Sales org should only contain letters, numbers and spaces";
+  const validateStorageLocation = (value) => {
+    if (!value) return "Storage Location is required";
     return "";
   };
 
-  const validateStorageLocation = (location) => {
-    if (!location || location.trim() === "") return "";
-    const locationRegex = /^[A-Za-z0-9\s]+$/;
-    if (!locationRegex.test(location))
-      return "Storage location should only contain letters, numbers and spaces";
-    return "";
-  };
-
-  const validateGrossWeight = (weight) => {
+  const validatePartWeight = (weight) => {
     if (weight && weight !== "") {
       const num = Number(weight);
-      if (isNaN(num)) return "Gross weight must be a number";
-      if (num < 0) return "Gross weight cannot be negative";
-    }
-    return "";
-  };
-
-  const validateNetWeight = (weight) => {
-    if (weight && weight !== "") {
-      const num = Number(weight);
-      if (isNaN(num)) return "Net weight must be a number";
-      if (num < 0) return "Net weight cannot be negative";
+      if (isNaN(num)) return "Part weight must be a number";
+      if (num < 0) return "Part weight cannot be negative";
+      if (num > 999999999) return "Part weight is too large";
     }
     return "";
   };
@@ -215,6 +183,7 @@ export default function MaterialForm({
       const num = Number(days);
       if (isNaN(num)) return "Shelf life must be a number";
       if (num < 0) return "Shelf life cannot be negative";
+      if (num > 99999) return "Shelf life is too large";
     }
     return "";
   };
@@ -224,36 +193,51 @@ export default function MaterialForm({
       const num = Number(qty);
       if (isNaN(num)) return "Quantity must be a number";
       if (num < 0) return "Quantity cannot be negative";
+      if (num > 999999999) return "Quantity is too large";
     }
     return "";
   };
 
-  const validateBatchNumber = (bn) => {
-    if (!bn || bn.trim() === "") return "Batch number is required";
-    if (!/^[A-Za-z0-9]+$/.test(bn))
-      return "Only letters and numbers are allowed";
+  const validateColorCode = (value) => {
+    if (value && value.length > 20) return "Color code must be less than 20 characters";
     return "";
+  };
+
+  const validateMaterialCode = (value) => {
+    if (value && value.length > 50) return "Material code must be less than 50 characters";
+    return "";
+  };
+
+  const validateCoilNumber = (value) => {
+    if (value && value.length > 50) return "Coil number must be less than 50 characters";
+    return "";
+  };
+
+  const validateHeatNumber = (value) => {
+    if (value && value.length > 50) return "Heat number must be less than 50 characters";
+    return "";
+  };
+
+  const checkDuplicatePartName = (name, excludeId) => {
+    if (!name || !materials.length) return "";
+    
+    const duplicate = materials.some(m => 
+      m.part_name && 
+      m.part_name.toLowerCase() === name.toLowerCase() && 
+      m.id !== (excludeId || -1)
+    );
+    
+    return duplicate ? "This Part Name already exists" : "";
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let processedValue = value;
 
-    // Real-time input restrictions
-    if (name === "batch_number") {
-      processedValue = value.replace(/[^A-Za-z0-9]/g, ""); // ← no \s
-    }
-    if (name === "material_group") {
-      processedValue = value.replace(/[^A-Za-z\s]/g, "");
-    }
-    if (name === "warehouse_number") {
-      processedValue = value.replace(/[^A-Za-z0-9\s]/g, "");
-    }
-    if (name === "sales_org") {
-      processedValue = value.replace(/[^A-Za-z0-9\s]/g, "");
-    }
-    if (name === "storage_location") {
-      processedValue = value.replace(/[^A-Za-z0-9\s]/g, "");
+    // Input restrictions
+    if (name === "part_name" || name === "material_name") {
+      // Allow letters, numbers, spaces, and common special characters
+      processedValue = value.replace(/[^a-zA-Z0-9\s\-.,()]/g, "");
     }
 
     setForm((prev) => ({
@@ -261,6 +245,7 @@ export default function MaterialForm({
       [name]: type === "checkbox" ? checked : processedValue,
     }));
 
+    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -269,29 +254,29 @@ export default function MaterialForm({
   const validateForm = () => {
     const newErrors = {};
 
-    const nameError = validateName(form.name);
-    if (nameError) newErrors.name = nameError;
+    // Required field validations
+    const partNameError = validatePartName(form.part_name);
+    if (partNameError) newErrors.part_name = partNameError;
+
+    const materialNameError = validateMaterialName(form.material_name);
+    if (materialNameError) newErrors.material_name = materialNameError;
+
+    const materialTypeError = validateMaterialType(form.material_type);
+    if (materialTypeError) newErrors.material_type = materialTypeError;
 
     const uomError = validateUOM(form.uom);
     if (uomError) newErrors.uom = uomError;
 
-    const materialGroupError = validateMaterialGroup(form.material_group);
-    if (materialGroupError) newErrors.material_group = materialGroupError;
-
-    const warehouseError = validateWarehouseNumber(form.warehouse_number);
-    if (warehouseError) newErrors.warehouse_number = warehouseError;
-
-    const salesOrgError = validateSalesOrg(form.sales_org);
-    if (salesOrgError) newErrors.sales_org = salesOrgError;
-
     const storageLocationError = validateStorageLocation(form.storage_location);
     if (storageLocationError) newErrors.storage_location = storageLocationError;
 
-    const grossWeightError = validateGrossWeight(form.gross_weight);
-    if (grossWeightError) newErrors.gross_weight = grossWeightError;
+    // Duplicate check
+    const duplicateError = checkDuplicatePartName(form.part_name, editingMaterial?.id);
+    if (duplicateError) newErrors.part_name = duplicateError;
 
-    const netWeightError = validateNetWeight(form.net_weight);
-    if (netWeightError) newErrors.net_weight = netWeightError;
+    // Optional field validations
+    const partWeightError = validatePartWeight(form.part_weight);
+    if (partWeightError) newErrors.part_weight = partWeightError;
 
     const shelfLifeError = validateShelfLife(form.shelf_life_days);
     if (shelfLifeError) newErrors.shelf_life_days = shelfLifeError;
@@ -299,8 +284,22 @@ export default function MaterialForm({
     const qtyError = validateQty(form.qty);
     if (qtyError) newErrors.qty = qtyError;
 
-    const bnError = validateBatchNumber(form.batch_number);
-    if (bnError) newErrors.batch_number = bnError;
+    const colorCodeError = validateColorCode(form.color_code);
+    if (colorCodeError) newErrors.color_code = colorCodeError;
+
+    const materialCodeError = validateMaterialCode(form.material_code);
+    if (materialCodeError) newErrors.material_code = materialCodeError;
+
+    const coilNumberError = validateCoilNumber(form.coil_number);
+    if (coilNumberError) newErrors.coil_number = coilNumberError;
+
+    const heatNumberError = validateHeatNumber(form.heat_number);
+    if (heatNumberError) newErrors.heat_number = heatNumberError;
+
+    // Job work category validation
+    if (form.material_type === "Job Work" && !form.job_work_category) {
+      newErrors.job_work_category = "Job Work Category is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -308,43 +307,58 @@ export default function MaterialForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
+    if (isSubmitting) return;
+    
     if (!validateForm()) {
+      // Scroll to the first error
+      const firstErrorField = Object.keys(errors)[0];
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"]`);
+        if (element) {
+          element.focus();
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
       return;
     }
 
-    const basePayload = {
-      industry_sector: form.industry_sector || null,
-      material_type: form.material_type || null,
-      material_group: form.material_group || null,
-      storage_type: form.storage_type || null,
-      warehouse_number: form.warehouse_number || null,
-      sales_org: form.sales_org || null,
-      storage_location: form.storage_location || null,
-      distribution_channel: form.distribution_channel || null,
-      gross_weight: form.gross_weight ? Number(form.gross_weight) : null,
-      net_weight: form.net_weight ? Number(form.net_weight) : null,
-      name: form.name || null,
-      batch_number: form.batch_number,
-      uom: form.uom || null,
-      shelf_life_days: form.shelf_life_days
-        ? Number(form.shelf_life_days)
-        : null,
-      expiry_date: form.expiry_date || null,
-      valuation_method: form.valuation_method || "MOVING_AVG",
-      issue_type: form.issue_type || "FIFO",
-      perishable: form.perishable ? 1 : 0,
-      qty: form.qty ? Number(form.qty) : null,
-    };
+    setIsSubmitting(true);
 
-    const payload = editingMaterial
-      ? { ...basePayload, material_number: form.material_number }
-      : basePayload;
+    try {
+      const basePayload = {
+        part_number: form.part_number || null,
+        part_name: form.part_name.trim(),
+        material_name: form.material_name.trim(),
+        material_code: form.material_code || null,
+        material_type: form.material_type,
+        job_work_category: form.material_type === "Job Work" ? form.job_work_category : null,
+        uom: form.uom,
+        color_code: form.color_code || null,
+        part_weight: form.part_weight ? Number(form.part_weight) : null,
+        received_date: form.received_date || null,
+        storage_location: form.storage_location,
+        coil_number: form.coil_number || null,
+        heat_number: form.heat_number || null,
+        shelf_life_days: form.shelf_life_days ? Number(form.shelf_life_days) : null,
+        status: form.status || "Active",
+        qty: form.qty ? Number(form.qty) : null,
+      };
 
-    await onSave(payload);
+      const payload = editingMaterial
+        ? { ...basePayload }
+        : basePayload;
 
-    if (!editingMaterial) {
-      setForm(getDefaultFormState());
+      await onSave(payload);
+
+      if (!editingMaterial) {
+        setForm(getDefaultFormState());
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      // Error handling is done in parent component
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -356,6 +370,9 @@ export default function MaterialForm({
     return errors[fieldName] ? selectErrorStyle : selectStyle;
   };
 
+  // Determine if Job Work Category should be shown
+  const showJobWorkCategory = form.material_type === "Job Work";
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -365,34 +382,85 @@ export default function MaterialForm({
         borderRadius: "12px",
         boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
       }}
+      noValidate
     >
       <div style={formRowStyle}>
         <label style={labelStyle}>
-          Material Number
+          Part Number
           <input
-            name="material_number"
-            value={form.material_number || ""}
+            name="part_number"
+            value={form.part_number || ""}
             style={inputStyle}
             readOnly
-            placeholder="Auto"
+            placeholder="Auto-generated"
+            title="Auto-generated when saving"
           />
         </label>
 
         <label style={labelStyle}>
-          Name <span style={asteriskStyle}></span>
+          Part Name <span style={asteriskStyle}>*</span>
           <input
-            name="name"
-            value={form.name}
+            name="part_name"
+            value={form.part_name}
             onChange={handleChange}
-            style={getInputStyle("name")}
+            style={getInputStyle("part_name")}
             required
-            placeholder="Only letters and spaces"
+            placeholder="Technical name of the part"
+            maxLength="200"
           />
-          {errors.name && <div style={errorMessageStyle}>{errors.name}</div>}
+          {errors.part_name && <div style={errorMessageStyle}>{errors.part_name}</div>}
         </label>
 
         <label style={labelStyle}>
-          UOM <span style={asteriskStyle}></span>
+          Material Name <span style={asteriskStyle}>*</span>
+          <input
+            name="material_name"
+            value={form.material_name}
+            onChange={handleChange}
+            style={getInputStyle("material_name")}
+            required
+            placeholder="Common name used by users"
+            maxLength="200"
+          />
+          {errors.material_name && <div style={errorMessageStyle}>{errors.material_name}</div>}
+        </label>
+      </div>
+
+      <div style={formRowStyle}>
+        <label style={labelStyle}>
+          Material Code
+          <input
+            name="material_code"
+            value={form.material_code || ""}
+            onChange={handleChange}
+            style={getInputStyle("material_code")}
+            placeholder="Internal company code"
+            maxLength="50"
+          />
+          {errors.material_code && <div style={errorMessageStyle}>{errors.material_code}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          Material Type <span style={asteriskStyle}>*</span>
+          <select
+            name="material_type"
+            value={form.material_type}
+            onChange={handleChange}
+            style={getSelectStyle("material_type")}
+            required
+          >
+            <option value="">Select Type</option>
+            <option value="Raw Material">Raw Material</option>
+            <option value="BOP">BOP (Bought-Out Parts)</option>
+            <option value="Job Work">Job Work</option>
+            <option value="Service">Service</option>
+            <option value="Accessories">Accessories</option>
+          </select>
+          {errors.material_type && <div style={errorMessageStyle}>{errors.material_type}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          UOM <span style={asteriskStyle}>*</span>
           <select
             name="uom"
             value={form.uom}
@@ -403,13 +471,153 @@ export default function MaterialForm({
             <option value="KG">KG (Kilograms)</option>
             <option value="LTR">LTR (Liters)</option>
             <option value="PCS">PCS (Pieces)</option>
+            <option value="NOS">NOS (Numbers)</option>
             <option value="BOXES">BOXES (Boxes)</option>
           </select>
           {errors.uom && <div style={errorMessageStyle}>{errors.uom}</div>}
         </label>
+      </div>
+
+      {showJobWorkCategory && (
+        <div style={formRowStyle}>
+          <label style={labelStyle}>
+            Job Work Category <span style={asteriskStyle}>*</span>
+            <select
+              name="job_work_category"
+              value={form.job_work_category}
+              onChange={handleChange}
+              style={getSelectStyle("job_work_category")}
+              required
+            >
+              <option value="">Select Category</option>
+              <option value="Forging">Forging</option>
+              <option value="Machining">Machining</option>
+              <option value="Plating">Plating</option>
+              <option value="Heat Treatment">Heat Treatment</option>
+              <option value="Tapping">Tapping</option>
+              <option value="Sorting">Sorting</option>
+              <option value="Thread Rolling">Thread Rolling</option>
+              <option value="Milling">Milling</option>
+            </select>
+            {errors.job_work_category && <div style={errorMessageStyle}>{errors.job_work_category}</div>}
+          </label>
+        </div>
+      )}
+
+      <div style={formRowStyle}>
+        <label style={labelStyle}>
+          Color Code
+          <input
+            name="color_code"
+            value={form.color_code}
+            onChange={handleChange}
+            style={getInputStyle("color_code")}
+            placeholder="Material or coating color"
+            maxLength="20"
+          />
+          {errors.color_code && <div style={errorMessageStyle}>{errors.color_code}</div>}
+        </label>
 
         <label style={labelStyle}>
-          Qty
+          Part Weight
+          <input
+            type="number"
+            step="0.001"
+            name="part_weight"
+            value={form.part_weight}
+            onChange={handleChange}
+            style={getInputStyle("part_weight")}
+            min="0"
+            placeholder="Weight per unit"
+          />
+          {errors.part_weight && <div style={errorMessageStyle}>{errors.part_weight}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          Received Date
+          <input
+            type="date"
+            name="received_date"
+            value={form.received_date}
+            onChange={handleChange}
+            style={inputStyle}
+          />
+        </label>
+      </div>
+
+      <div style={formRowStyle}>
+        <label style={labelStyle}>
+          Storage Location <span style={asteriskStyle}>*</span>
+          <select
+            name="storage_location"
+            value={form.storage_location}
+            onChange={handleChange}
+            style={getSelectStyle("storage_location")}
+            required
+          >
+            <option value="RM Storage">RM Storage</option>
+            <option value="BOP Storage">BOP Storage</option>
+          </select>
+          {errors.storage_location && <div style={errorMessageStyle}>{errors.storage_location}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          Coil Number
+          <input
+            name="coil_number"
+            value={form.coil_number}
+            onChange={handleChange}
+            style={getInputStyle("coil_number")}
+            placeholder="Unique coil number"
+            maxLength="50"
+          />
+          {errors.coil_number && <div style={errorMessageStyle}>{errors.coil_number}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          Heat Number
+          <input
+            name="heat_number"
+            value={form.heat_number}
+            onChange={handleChange}
+            style={getInputStyle("heat_number")}
+            placeholder="Manufacturer's heat number"
+            maxLength="50"
+          />
+          {errors.heat_number && <div style={errorMessageStyle}>{errors.heat_number}</div>}
+        </label>
+      </div>
+
+      <div style={formRowStyle}>
+        <label style={labelStyle}>
+          Shelf Life (Days)
+          <input
+            type="number"
+            name="shelf_life_days"
+            value={form.shelf_life_days}
+            onChange={handleChange}
+            style={getInputStyle("shelf_life_days")}
+            min="0"
+            placeholder="Days material remains usable"
+          />
+          {errors.shelf_life_days && <div style={errorMessageStyle}>{errors.shelf_life_days}</div>}
+        </label>
+
+        <label style={labelStyle}>
+          Status
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            style={selectStyle}
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </label>
+
+        <label style={labelStyle}>
+          Quantity
           <input
             type="number"
             name="qty"
@@ -418,279 +626,34 @@ export default function MaterialForm({
             style={getInputStyle("qty")}
             min="0"
             step="0.01"
-            placeholder="Quantity"
+            placeholder="Current quantity"
           />
           {errors.qty && <div style={errorMessageStyle}>{errors.qty}</div>}
         </label>
       </div>
 
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Industry Sector
-          <select
-            name="industry_sector"
-            value={form.industry_sector}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="">Select Sector</option>
-            <option value="CHEMICALS">Chemicals</option>
-            <option value="PHARMA">Pharmaceuticals</option>
-            <option value="FOOD">Food & Beverages</option>
-            <option value="ELECTRONICS">Electronics</option>
-          </select>
-        </label>
-
-        <label style={labelStyle}>
-          Material Type
-          <select
-            name="material_type"
-            value={form.material_type}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="">Select Type</option>
-            <option value="RAW">Raw Material</option>
-            <option value="SEMI">Semi-Finished</option>
-            <option value="FINISHED">Finished Good</option>
-            <option value="OTHER">Other</option>
-          </select>
-        </label>
-      </div>
-
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Material Group
-          <input
-            name="material_group"
-            value={form.material_group}
-            onChange={handleChange}
-            style={getInputStyle("material_group")}
-            placeholder="Only letters and spaces"
-          />
-          {errors.material_group && (
-            <div style={errorMessageStyle}>{errors.material_group}</div>
-          )}
-        </label>
-        <label style={labelStyle}>
-          Storage Type
-          <select
-            name="storage_type"
-            value={form.storage_type}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="">Select Type</option>
-            <option value="BULK">Bulk</option>
-            <option value="PALLET">Pallet</option>
-            <option value="SHELF">Shelf</option>
-            <option value="COLD_STORAGE">Cold Storage</option>
-          </select>
-        </label>
-        <label style={labelStyle}>
-          Warehouse Number
-          <input
-            name="warehouse_number"
-            value={form.warehouse_number}
-            onChange={handleChange}
-            style={getInputStyle("warehouse_number")}
-            placeholder="Letters, numbers and spaces only"
-          />
-          {errors.warehouse_number && (
-            <div style={errorMessageStyle}>{errors.warehouse_number}</div>
-          )}
-        </label>
-      </div>
-
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Sales Org
-          <input
-            name="sales_org"
-            value={form.sales_org}
-            onChange={handleChange}
-            style={getInputStyle("sales_org")}
-            placeholder="Letters, numbers and spaces only"
-          />
-          {errors.sales_org && (
-            <div style={errorMessageStyle}>{errors.sales_org}</div>
-          )}
-        </label>
-        <label style={labelStyle}>
-          Storage Location
-          <input
-            name="storage_location"
-            value={form.storage_location}
-            onChange={handleChange}
-            style={getInputStyle("storage_location")}
-            placeholder="Letters, numbers and spaces only"
-          />
-          {errors.storage_location && (
-            <div style={errorMessageStyle}>{errors.storage_location}</div>
-          )}
-        </label>
-        <label style={labelStyle}>
-          Distribution Channel
-          <select
-            name="distribution_channel"
-            value={form.distribution_channel}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="">Select Channel</option>
-            <option value="B2B">B2B</option>
-            <option value="B2C">B2C</option>
-            <option value="EXPORT">Export</option>
-          </select>
-        </label>
-      </div>
-
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Gross Weight
-          <input
-            type="number"
-            step="0.01"
-            name="gross_weight"
-            value={form.gross_weight}
-            onChange={handleChange}
-            style={getInputStyle("gross_weight")}
-            min="0"
-            placeholder="Gross weight"
-          />
-          {errors.gross_weight && (
-            <div style={errorMessageStyle}>{errors.gross_weight}</div>
-          )}
-        </label>
-        <label style={labelStyle}>
-          Net Weight
-          <input
-            type="number"
-            step="0.01"
-            name="net_weight"
-            value={form.net_weight}
-            onChange={handleChange}
-            style={getInputStyle("net_weight")}
-            min="0"
-            placeholder="Net weight"
-          />
-          {errors.net_weight && (
-            <div style={errorMessageStyle}>{errors.net_weight}</div>
-          )}
-        </label>
-        <label style={labelStyle}>
-          Shelf Life (days)
-          <input
-            type="number"
-            name="shelf_life_days"
-            value={form.shelf_life_days}
-            onChange={handleChange}
-            style={getInputStyle("shelf_life_days")}
-            min="0"
-            placeholder="Shelf life in days"
-          />
-          {errors.shelf_life_days && (
-            <div style={errorMessageStyle}>{errors.shelf_life_days}</div>
-          )}
-        </label>
-      </div>
-
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Valuation Method
-          <select
-            name="valuation_method"
-            value={form.valuation_method}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="MOVING_AVG">Moving Average</option>
-            <option value="FIFO">FIFO</option>
-            <option value="LIFO">LIFO</option>
-          </select>
-        </label>
-        <label style={labelStyle}>
-          Issue Type
-          <select
-            name="issue_type"
-            value={form.issue_type}
-            onChange={handleChange}
-            style={selectStyle}
-          >
-            <option value="FIFO">FIFO</option>
-            <option value="LIFO">LIFO</option>
-            <option value="FEFO">FEFO</option>
-          </select>
-        </label>
-      </div>
-
-      <div
-        style={{
-          marginBottom: "16px",
-          padding: "12px",
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
-          borderRadius: "8px",
-          borderLeft: "4px solid #3b82f6",
-        }}
-      >
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontSize: "14px",
-            fontWeight: "500",
-            color: "#1e40af",
-          }}
-        >
-          <input
-            type="checkbox"
-            name="perishable"
-            checked={!!form.perishable}
-            onChange={handleChange}
-          />
-          <span>Perishable item (has expiry date)</span>
-        </label>
-      </div>
-
-      {/* Batch & Expiry Row */}
-      <div style={formRowStyle}>
-        <label style={labelStyle}>
-          Batch Number <span style={asteriskStyle}>*</span>
-          <input
-            name="batch_number"
-            value={form.batch_number}
-            onChange={handleChange}
-            style={getInputStyle("batch_number")}
-            required
-            placeholder="Only letters and numbers"
-          />
-          {errors.batch_number && (
-            <div style={errorMessageStyle}>{errors.batch_number}</div>
-          )}
-        </label>
-
-        <label style={labelStyle}>
-          Expiry Date
-          <input
-            type="date"
-            name="expiry_date"
-            value={form.expiry_date}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-        </label>
-      </div>
-
       {/* Buttons */}
-      <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "16px" }}>
         <button
           type="submit"
-          style={primaryBtnStyle}
-          onMouseOver={(e) => (e.target.style.transform = "translateY(-2px)")}
-          onMouseOut={(e) => (e.target.style.transform = "none")}
+          style={{
+            ...primaryBtnStyle,
+            opacity: isSubmitting ? 0.7 : 1,
+            cursor: isSubmitting ? "not-allowed" : "pointer",
+          }}
+          onMouseOver={(e) => {
+            if (!isSubmitting) {
+              e.target.style.transform = "translateY(-2px)";
+            }
+          }}
+          onMouseOut={(e) => {
+            if (!isSubmitting) {
+              e.target.style.transform = "none";
+            }
+          }}
+          disabled={isSubmitting}
         >
-          {editingMaterial ? "Update Material" : "Save Material"}
+          {isSubmitting ? "Saving..." : (editingMaterial ? "Update Material" : "Save Material")}
         </button>
         {editingMaterial && (
           <button
