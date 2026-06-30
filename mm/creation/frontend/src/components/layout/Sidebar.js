@@ -47,6 +47,12 @@ export default function Sidebar() {
   return (
     <div style={sidebarStyle}>
       <div style={logoStyle}>MM System</div>
+      <NavLink
+  to="/dashboard"
+  style={({ isActive }) => (isActive ? activeNavItemStyle : navItemStyle)}
+>
+  Dashboard
+</NavLink>
 
       <div style={groupTitleStyle}>Masters</div>
       <NavLink

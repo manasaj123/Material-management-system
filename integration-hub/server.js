@@ -22,7 +22,11 @@ async function initDB() {
   db = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "root",
+
+    
+
+    password: "root123",
+
     database: "integration_hub_db",
   });
   console.log("✅ Integration Hub DB connected");

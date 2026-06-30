@@ -18,7 +18,8 @@ import GoodsissuePage from "../pages/GoodsissuePage";
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/vendors" element={<VendorPage />} />
       <Route path="/materials" element={<MaterialPage />} />
       <Route path="/pr" element={<PRPage />} />
