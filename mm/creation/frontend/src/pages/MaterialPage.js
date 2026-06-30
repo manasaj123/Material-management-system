@@ -42,6 +42,22 @@ const refreshButtonStyle = {
   marginBottom: "16px"
 };
 
+// Helper function to format date for display
+const formatDateForDisplay = (dateValue) => {
+  if (!dateValue) return "—";
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "—";
+    // Format as DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch {
+    return "—";
+  }
+};
+
 export default function MaterialPage() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,7 +77,7 @@ export default function MaterialPage() {
     } catch (e) {
       console.error("Error loading materials:", e);
       if (e.response && e.response.status === 404) {
-        alert("❌ Cannot connect to the server. Please make sure the backend is running on port 5000.");
+        alert("❌ Cannot connect to the server. Please make sure the backend is running on port 5002.");
       } else {
         alert("❌ Failed to load materials. Please check the console for details.");
       }
@@ -127,6 +143,8 @@ export default function MaterialPage() {
         color_code: form.color_code ? form.color_code.trim() : "",
         coil_number: form.coil_number ? form.coil_number.trim() : "",
         heat_number: form.heat_number ? form.heat_number.trim() : "",
+        // Ensure received_date is in YYYY-MM-DD format
+        received_date: form.received_date || null,
       };
       
       let response;
@@ -320,7 +338,7 @@ export default function MaterialPage() {
               <p><b>UOM:</b> {viewMaterial.uom}</p>
               <p><b>Color Code:</b> {viewMaterial.color_code || "—"}</p>
               <p><b>Part Weight:</b> {viewMaterial.part_weight || "—"}</p>
-              <p><b>Received Date:</b> {viewMaterial.received_date || "—"}</p>
+              <p><b>Received Date:</b> {formatDateForDisplay(viewMaterial.received_date)}</p>
               <p><b>Storage Location:</b> {viewMaterial.storage_location}</p>
               <p><b>Coil Number:</b> {viewMaterial.coil_number || "—"}</p>
               <p><b>Heat Number:</b> {viewMaterial.heat_number || "—"}</p>

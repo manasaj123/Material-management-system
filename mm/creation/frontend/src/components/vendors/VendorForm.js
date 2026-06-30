@@ -21,6 +21,12 @@ const inputStyle = {
   border: "1px solid #d1d5db"
 };
 
+const inputErrorStyle = {
+  ...inputStyle,
+  border: "2px solid #dc2626",
+  backgroundColor: "#fef2f2"
+};
+
 const errorStyle = {
   color: "#dc2626",
   fontSize: "11px",
@@ -44,14 +50,22 @@ const cancelButtonStyle = {
   backgroundColor: "#6b7280"
 };
 
+const asteriskStyle = {
+  color: "#dc2626",
+  marginLeft: "2px"
+};
+
 export default function VendorForm({ onSave, editingVendor, onCancelEdit, existingVendors = [] }) {
   const [form, setForm] = useState({
     name: "",
-    type: "VENDOR",
+    material_type: "",
+    job_work_category: "",
     address: "",
+    location: "",
     contact: "",
     gst_no: "",
     bank_details: "",
+    qms_certification: "",
     status: "ACTIVE",
     rating: 0
   });
@@ -60,15 +74,30 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
 
   useEffect(() => {
     if (editingVendor) {
-      setForm(editingVendor);
+      setForm({
+        name: editingVendor.name || "",
+        material_type: editingVendor.material_type || "",
+        job_work_category: editingVendor.job_work_category || "",
+        address: editingVendor.address || "",
+        location: editingVendor.location || "",
+        contact: editingVendor.contact || "",
+        gst_no: editingVendor.gst_no || "",
+        bank_details: editingVendor.bank_details || "",
+        qms_certification: editingVendor.qms_certification || "",
+        status: editingVendor.status || "ACTIVE",
+        rating: editingVendor.rating || 0
+      });
     } else {
       setForm({
         name: "",
-        type: "VENDOR",
+        material_type: "",
+        job_work_category: "",
         address: "",
+        location: "",
         contact: "",
         gst_no: "",
         bank_details: "",
+        qms_certification: "",
         status: "ACTIVE",
         rating: 0
       });
@@ -84,9 +113,29 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
     return "";
   };
 
+  // Validate material type - required
+  const validateMaterialType = (type) => {
+    if (!type) return "Material Type is required";
+    return "";
+  };
+
+  // Validate job work category - required if material type is "Job Work"
+  const validateJobWorkCategory = (category, materialType) => {
+    if (materialType === "Job Work" && !category) {
+      return "Job Work Category is required";
+    }
+    return "";
+  };
+
   // Validate address - required
   const validateAddress = (address) => {
     if (!address || address.trim() === "") return "Address is required";
+    return "";
+  };
+
+  // Validate location - required
+  const validateLocation = (location) => {
+    if (!location || location.trim() === "") return "Location is required";
     return "";
   };
 
@@ -167,6 +216,19 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
+    
+    // If material_type changes, clear job_work_category error
+    if (name === "material_type") {
+      setErrors(prev => ({ ...prev, job_work_category: "" }));
+    }
+  };
+
+  const getInputStyle = (fieldName) => {
+    return errors[fieldName] ? inputErrorStyle : inputStyle;
+  };
+
+  const getSelectStyle = (fieldName) => {
+    return errors[fieldName] ? inputErrorStyle : inputStyle;
   };
 
   const validateForm = () => {
@@ -176,8 +238,18 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
     const nameError = validateName(form.name);
     if (nameError) newErrors.name = nameError;
     
+    const materialTypeError = validateMaterialType(form.material_type);
+    if (materialTypeError) newErrors.material_type = materialTypeError;
+    
+    // Job work category validation
+    const jobWorkError = validateJobWorkCategory(form.job_work_category, form.material_type);
+    if (jobWorkError) newErrors.job_work_category = jobWorkError;
+    
     const addressError = validateAddress(form.address);
     if (addressError) newErrors.address = addressError;
+    
+    const locationError = validateLocation(form.location);
+    if (locationError) newErrors.location = locationError;
     
     const contactError = validateContact(form.contact);
     if (contactError) newErrors.contact = contactError;
@@ -209,11 +281,14 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
       if (!editingVendor) {
         setForm({
           name: "",
-          type: "VENDOR",
+          material_type: "",
+          job_work_category: "",
           address: "",
+          location: "",
           contact: "",
           gst_no: "",
           bank_details: "",
+          qms_certification: "",
           status: "ACTIVE",
           rating: 0
         });
@@ -221,13 +296,16 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
     }
   };
 
+  // Determine if Job Work Category should be shown
+  const showJobWorkCategory = form.material_type === "Job Work";
+
   return (
     <form onSubmit={handleSubmit}>
       <div style={formRowStyle}>
         <label style={labelStyle}>
-          Name *
+          Vendor Name <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("name")}
             name="name"
             value={form.name}
             onChange={handleChange}
@@ -237,25 +315,56 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
           {errors.name && <div style={errorStyle}>{errors.name}</div>}
         </label>
         <label style={labelStyle}>
-          Type *
+          Material Type <span style={asteriskStyle}>*</span>
           <select
-            style={inputStyle}
-            name="type"
-            value={form.type}
+            name="material_type"
+            value={form.material_type}
             onChange={handleChange}
+            style={getSelectStyle("material_type")}
             required
           >
-            <option value="VENDOR">Vendor</option>
-            <option value="FARMER">Farmer</option>
+            <option value="">Select Type</option>
+            <option value="Raw Material">Raw Material</option>
+            <option value="BOP">BOP (Bought-Out Parts)</option>
+            <option value="Job Work">Job Work</option>
+            <option value="Service">Service</option>
+            <option value="Accessories">Accessories</option>
           </select>
+          {errors.material_type && <div style={errorStyle}>{errors.material_type}</div>}
         </label>
       </div>
 
+      {showJobWorkCategory && (
+        <div style={formRowStyle}>
+          <label style={labelStyle}>
+            Job Work Category <span style={asteriskStyle}>*</span>
+            <select
+              name="job_work_category"
+              value={form.job_work_category}
+              onChange={handleChange}
+              style={getSelectStyle("job_work_category")}
+              required
+            >
+              <option value="">Select Category</option>
+              <option value="Forging">Forging</option>
+              <option value="Machining">Machining</option>
+              <option value="Plating">Plating</option>
+              <option value="Heat Treatment">Heat Treatment</option>
+              <option value="Tapping">Tapping</option>
+              <option value="Sorting">Sorting</option>
+              <option value="Thread Rolling">Thread Rolling</option>
+              <option value="Milling">Milling</option>
+            </select>
+            {errors.job_work_category && <div style={errorStyle}>{errors.job_work_category}</div>}
+          </label>
+        </div>
+      )}
+
       <div style={formRowStyle}>
         <label style={labelStyle}>
-          Address *
+          Address <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("address")}
             name="address"
             value={form.address}
             onChange={handleChange}
@@ -265,9 +374,24 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
           {errors.address && <div style={errorStyle}>{errors.address}</div>}
         </label>
         <label style={labelStyle}>
-          Contact *
+          Location <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("location")}
+            name="location"
+            value={form.location}
+            onChange={handleChange}
+            required
+            placeholder="City, State, or Region"
+          />
+          {errors.location && <div style={errorStyle}>{errors.location}</div>}
+        </label>
+      </div>
+
+      <div style={formRowStyle}>
+        <label style={labelStyle}>
+          Contact <span style={asteriskStyle}>*</span>
+          <input
+            style={getInputStyle("contact")}
             name="contact"
             value={form.contact}
             onChange={handleChange}
@@ -277,13 +401,10 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
           />
           {errors.contact && <div style={errorStyle}>{errors.contact}</div>}
         </label>
-      </div>
-
-      <div style={formRowStyle}>
         <label style={labelStyle}>
-          GST No *
+          GST No <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("gst_no")}
             name="gst_no"
             value={form.gst_no}
             onChange={handleChange}
@@ -293,10 +414,13 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
           />
           {errors.gst_no && <div style={errorStyle}>{errors.gst_no}</div>}
         </label>
+      </div>
+
+      <div style={formRowStyle}>
         <label style={labelStyle}>
-          Bank Details *
+          Bank Details <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("bank_details")}
             name="bank_details"
             value={form.bank_details}
             onChange={handleChange}
@@ -305,26 +429,51 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
           />
           {errors.bank_details && <div style={errorStyle}>{errors.bank_details}</div>}
         </label>
+        <label style={labelStyle}>
+          QMS Certification
+          <select
+            style={inputStyle}
+            name="qms_certification"
+            value={form.qms_certification}
+            onChange={handleChange}
+          >
+            <option value="">Select Certification</option>
+            <option value="ISO 9001">ISO 9001</option>
+            <option value="ISO 14001">ISO 14001</option>
+            <option value="ISO 45001">ISO 45001</option>
+            <option value="ISO 22000">ISO 22000</option>
+            <option value="IATF 16949">IATF 16949</option>
+            <option value="AS9100">AS9100</option>
+            <option value="IRIS">IRIS</option>
+            <option value="CE">CE</option>
+            <option value="UL">UL</option>
+            <option value="RoHS">RoHS</option>
+            <option value="REACH">REACH</option>
+            <option value="HACCP">HACCP</option>
+            <option value="GMP">GMP</option>
+            <option value="Other">Other</option>
+          </select>
+          {errors.qms_certification && <div style={errorStyle}>{errors.qms_certification}</div>}
+        </label>
       </div>
 
       <div style={formRowStyle}>
         <label style={labelStyle}>
-          Status *
+          Status
           <select
             style={inputStyle}
             name="status"
             value={form.status}
             onChange={handleChange}
-            required
           >
             <option value="ACTIVE">Active</option>
             <option value="INACTIVE">Inactive</option>
           </select>
         </label>
         <label style={labelStyle}>
-          Rating *
+          Rating <span style={asteriskStyle}>*</span>
           <input
-            style={inputStyle}
+            style={getInputStyle("rating")}
             name="rating"
             type="number"
             step="1"
@@ -340,7 +489,7 @@ export default function VendorForm({ onSave, editingVendor, onCancelEdit, existi
       </div>
 
       <button type="submit" style={buttonStyle}>
-        {editingVendor ? "Update Vendor / Farmer" : "Save Vendor / Farmer"}
+        {editingVendor ? "Update Vendor" : "Save Vendor"}
       </button>
       
       {editingVendor && (

@@ -53,7 +53,7 @@ export default function Sidebar() {
         to="/vendors"
         style={({ isActive }) => (isActive ? activeNavItemStyle : navItemStyle)}
       >
-        Vendors / Farmers
+        Vendors
       </NavLink>
       <NavLink
         to="/materials"

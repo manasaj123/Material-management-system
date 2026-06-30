@@ -18,14 +18,23 @@ const tdStyle = {
   borderBottom: "1px solid #f3f4f6"
 };
 
-const badgeStyle = (type) => ({
-  display: "inline-block",
-  padding: "2px 6px",
-  borderRadius: "999px",
-  fontSize: "11px",
-  backgroundColor: type === "FARMER" ? "#f97316" : "#10b981",
-  color: "#ffffff"
-});
+const badgeStyle = (type) => {
+  const colors = {
+    "Raw Material": "#10b981",
+    "BOP": "#3b82f6",
+    "Job Work": "#f97316",
+    "Service": "#8b5cf6",
+    "Accessories": "#ec4899"
+  };
+  return {
+    display: "inline-block",
+    padding: "2px 6px",
+    borderRadius: "999px",
+    fontSize: "11px",
+    backgroundColor: colors[type] || "#6b7280",
+    color: "#ffffff"
+  };
+};
 
 const editButtonStyle = {
   padding: "4px 8px",
@@ -74,9 +83,11 @@ export default function VendorList({ data, onEdit }) {
         <thead>
           <tr>
             <th style={thStyle}>Name</th>
-            <th style={thStyle}>Type</th>
+            <th style={thStyle}>Material Type</th>
             <th style={thStyle}>Contact</th>
             <th style={thStyle}>GST</th>
+            <th style={thStyle}>Location</th>
+            <th style={thStyle}>Certification</th>
             <th style={thStyle}>Status</th>
             <th style={thStyle}>Rating</th>
             <th style={thStyle}>Actions</th>
@@ -89,14 +100,27 @@ export default function VendorList({ data, onEdit }) {
               <td style={tdStyle}>{v.name}</td>
 
               <td style={tdStyle}>
-                <span style={badgeStyle(v.type)}>
-                  {v.type}
+                <span style={badgeStyle(v.material_type)}>
+                  {v.material_type}
                 </span>
+                {v.material_type === "Job Work" && v.job_work_category && (
+                  <div style={{ fontSize: "9px", color: "#6b7280", marginTop: "2px" }}>
+                    {v.job_work_category}
+                  </div>
+                )}
               </td>
 
               <td style={tdStyle}>{v.contact}</td>
 
               <td style={tdStyle}>{v.gst_no}</td>
+
+              <td style={tdStyle}>{v.location || "—"}</td>
+
+              <td style={tdStyle}>
+                <span style={{ fontSize: "11px" }}>
+                  {v.qms_certification || "—"}
+                </span>
+              </td>
 
               <td style={tdStyle}>
                 <span style={statusBadgeStyle(v.status)}>
@@ -153,11 +177,16 @@ export default function VendorList({ data, onEdit }) {
             <h3>Vendor Details</h3>
 
             <p><b>Name:</b> {viewVendor.name}</p>
-            <p><b>Type:</b> {viewVendor.type}</p>
+            <p><b>Material Type:</b> {viewVendor.material_type}</p>
+            {viewVendor.material_type === "Job Work" && viewVendor.job_work_category && (
+              <p><b>Job Work Category:</b> {viewVendor.job_work_category}</p>
+            )}
             <p><b>Contact:</b> {viewVendor.contact}</p>
             <p><b>GST No:</b> {viewVendor.gst_no}</p>
             <p><b>Address:</b> {viewVendor.address}</p>
+            <p><b>Location:</b> {viewVendor.location || "—"}</p>
             <p><b>Bank Details:</b> {viewVendor.bank_details}</p>
+            <p><b>QMS Certification:</b> {viewVendor.qms_certification || "—"}</p>
             <p><b>Status:</b> {viewVendor.status}</p>
             <p><b>Rating:</b> {viewVendor.rating}</p>
 

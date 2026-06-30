@@ -10,23 +10,83 @@ export const Vendor = {
   },
 
   create(data) {
-    const { name, type, address, contact, gst_no, bank_details, status, rating } = data;
+    const { 
+      name, 
+      material_type, 
+      job_work_category,
+      address, 
+      location, 
+      contact, 
+      gst_no, 
+      bank_details, 
+      qms_certification, 
+      status, 
+      rating 
+    } = data;
+    
     return db.query(
       `INSERT INTO vendors 
-       (name, type, address, contact, gst_no, bank_details, status, rating)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, type, address, contact, gst_no, bank_details, status || "ACTIVE", rating || 0]
+       (name, material_type, job_work_category, address, location, contact, gst_no, bank_details, qms_certification, status, rating)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name, 
+        material_type, 
+        job_work_category || null,
+        address, 
+        location, 
+        contact, 
+        gst_no, 
+        bank_details, 
+        qms_certification || null, 
+        status || "ACTIVE", 
+        rating || 0
+      ]
     );
   },
 
   update(id, data) {
-    const { name, type, address, contact, gst_no, bank_details, status, rating } = data;
+    const { 
+      name, 
+      material_type, 
+      job_work_category,
+      address, 
+      location, 
+      contact, 
+      gst_no, 
+      bank_details, 
+      qms_certification, 
+      status, 
+      rating 
+    } = data;
+    
     return db.query(
       `UPDATE vendors SET 
-        name = ?, type = ?, address = ?, contact = ?, 
-        gst_no = ?, bank_details = ?, status = ?, rating = ?
+        name = ?, 
+        material_type = ?, 
+        job_work_category = ?,
+        address = ?, 
+        location = ?, 
+        contact = ?, 
+        gst_no = ?, 
+        bank_details = ?, 
+        qms_certification = ?, 
+        status = ?, 
+        rating = ?
        WHERE id = ?`,
-      [name, type, address, contact, gst_no, bank_details, status, rating, id]
+      [
+        name, 
+        material_type, 
+        job_work_category || null,
+        address, 
+        location, 
+        contact, 
+        gst_no, 
+        bank_details, 
+        qms_certification || null, 
+        status, 
+        rating, 
+        id
+      ]
     );
   },
 

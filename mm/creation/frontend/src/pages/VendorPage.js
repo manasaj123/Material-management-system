@@ -64,7 +64,7 @@ export default function VendorPage() {
 
   return (
     <div>
-      <div style={titleStyle}>Vendors / Farmers</div>
+      <div style={titleStyle}>Vendors </div>
 
       <div style={cardStyle}>
         <VendorForm 

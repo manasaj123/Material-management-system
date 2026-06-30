@@ -1,0 +1,43 @@
+{
+  "name": "fico-accounting-backend",
+  "version": "1.0.0",
+  "description": "FICO-style accounting backend (GL, AR/AP, bank, budget, cost/profit center, expenses, audit)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "accounting",
+    "finance",
+    "fico",
+    "express",
+    "mysql",
+    "ledger",
+    "invoice",
+    "payment",
+    "bank-reconciliation"
+  ],
+  "author": "fico-accounting",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.11.3",
+    "sequelize": "^6.37.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.13.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^7.1.0",
+    "nodemon": "^3.1.7"
+  }
+}

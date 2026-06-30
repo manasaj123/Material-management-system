@@ -23,7 +23,7 @@ async function initDB() {
     host: "localhost",
     user: "root",
     password: "root",
-    database: "integration_hub",
+    database: "integration_hub_db",
   });
   console.log("✅ Integration Hub DB connected");
 }

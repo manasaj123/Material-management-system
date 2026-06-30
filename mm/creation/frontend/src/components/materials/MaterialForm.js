@@ -79,6 +79,35 @@ const asteriskStyle = {
   marginLeft: "2px",
 };
 
+// Get today's date in local timezone as YYYY-MM-DD
+const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Format date for input field - ensures date is displayed correctly
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return "";
+  
+  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    return dateValue;
+  }
+  
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch {
+    return "";
+  }
+};
+
 const getDefaultFormState = () => ({
   part_number: "",
   part_name: "",
@@ -89,7 +118,7 @@ const getDefaultFormState = () => ({
   uom: "KG",
   color_code: "",
   part_weight: "",
-  received_date: "",
+  received_date: getTodayDate(),
   storage_location: "RM Storage",
   coil_number: "",
   heat_number: "",
@@ -116,6 +145,19 @@ export default function MaterialForm({
 
   useEffect(() => {
     if (editingMaterial) {
+      let formattedDate = "";
+      if (editingMaterial.received_date) {
+        if (typeof editingMaterial.received_date === 'string') {
+          if (editingMaterial.received_date.includes('T')) {
+            formattedDate = editingMaterial.received_date.split('T')[0];
+          } else {
+            formattedDate = editingMaterial.received_date;
+          }
+        } else {
+          formattedDate = formatDateForInput(editingMaterial.received_date);
+        }
+      }
+      
       setForm({
         part_number: safeString(editingMaterial.part_number),
         part_name: safeString(editingMaterial.part_name),
@@ -126,7 +168,7 @@ export default function MaterialForm({
         uom: safeString(editingMaterial.uom) || "KG",
         color_code: safeString(editingMaterial.color_code),
         part_weight: safeString(editingMaterial.part_weight),
-        received_date: safeString(editingMaterial.received_date),
+        received_date: formattedDate || getTodayDate(),
         storage_location: safeString(editingMaterial.storage_location) || "RM Storage",
         coil_number: safeString(editingMaterial.coil_number),
         heat_number: safeString(editingMaterial.heat_number),
@@ -140,7 +182,12 @@ export default function MaterialForm({
     setErrors({});
   }, [editingMaterial, safeString]);
 
-  // Validation functions
+  const validatePartNumber = (value) => {
+    if (!value || value.trim() === "") return "Part Number is required";
+    if (value.length > 50) return "Part Number must be less than 50 characters";
+    return "";
+  };
+
   const validatePartName = (value) => {
     if (!value || value.trim() === "") return "Part Name is required";
     if (value.length > 200) return "Part Name must be less than 200 characters";
@@ -218,6 +265,18 @@ export default function MaterialForm({
     return "";
   };
 
+  const checkDuplicatePartNumber = (partNumber, excludeId) => {
+    if (!partNumber || !materials.length) return "";
+    
+    const duplicate = materials.some(m => 
+      m.part_number && 
+      m.part_number.toLowerCase() === partNumber.toLowerCase() && 
+      m.id !== (excludeId || -1)
+    );
+    
+    return duplicate ? "This Part Number already exists" : "";
+  };
+
   const checkDuplicatePartName = (name, excludeId) => {
     if (!name || !materials.length) return "";
     
@@ -234,10 +293,12 @@ export default function MaterialForm({
     const { name, value, type, checked } = e.target;
     let processedValue = value;
 
-    // Input restrictions
     if (name === "part_name" || name === "material_name") {
-      // Allow letters, numbers, spaces, and common special characters
-      processedValue = value.replace(/[^a-zA-Z0-9\s\-.,()]/g, "");
+      processedValue = value;
+    }
+
+    if (name === "received_date") {
+      processedValue = value;
     }
 
     setForm((prev) => ({
@@ -245,7 +306,6 @@ export default function MaterialForm({
       [name]: type === "checkbox" ? checked : processedValue,
     }));
 
-    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -254,7 +314,12 @@ export default function MaterialForm({
   const validateForm = () => {
     const newErrors = {};
 
-    // Required field validations
+    const partNumberError = validatePartNumber(form.part_number);
+    if (partNumberError) newErrors.part_number = partNumberError;
+
+    const duplicatePartNumberError = checkDuplicatePartNumber(form.part_number, editingMaterial?.id);
+    if (duplicatePartNumberError) newErrors.part_number = duplicatePartNumberError;
+
     const partNameError = validatePartName(form.part_name);
     if (partNameError) newErrors.part_name = partNameError;
 
@@ -270,11 +335,9 @@ export default function MaterialForm({
     const storageLocationError = validateStorageLocation(form.storage_location);
     if (storageLocationError) newErrors.storage_location = storageLocationError;
 
-    // Duplicate check
-    const duplicateError = checkDuplicatePartName(form.part_name, editingMaterial?.id);
-    if (duplicateError) newErrors.part_name = duplicateError;
+    const duplicateNameError = checkDuplicatePartName(form.part_name, editingMaterial?.id);
+    if (duplicateNameError) newErrors.part_name = duplicateNameError;
 
-    // Optional field validations
     const partWeightError = validatePartWeight(form.part_weight);
     if (partWeightError) newErrors.part_weight = partWeightError;
 
@@ -296,7 +359,6 @@ export default function MaterialForm({
     const heatNumberError = validateHeatNumber(form.heat_number);
     if (heatNumberError) newErrors.heat_number = heatNumberError;
 
-    // Job work category validation
     if (form.material_type === "Job Work" && !form.job_work_category) {
       newErrors.job_work_category = "Job Work Category is required";
     }
@@ -311,7 +373,6 @@ export default function MaterialForm({
     if (isSubmitting) return;
     
     if (!validateForm()) {
-      // Scroll to the first error
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
         const element = document.querySelector(`[name="${firstErrorField}"]`);
@@ -327,7 +388,7 @@ export default function MaterialForm({
 
     try {
       const basePayload = {
-        part_number: form.part_number || null,
+        part_number: form.part_number.trim(),
         part_name: form.part_name.trim(),
         material_name: form.material_name.trim(),
         material_code: form.material_code || null,
@@ -356,7 +417,6 @@ export default function MaterialForm({
       }
     } catch (error) {
       console.error("Submit error:", error);
-      // Error handling is done in parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -370,7 +430,6 @@ export default function MaterialForm({
     return errors[fieldName] ? selectErrorStyle : selectStyle;
   };
 
-  // Determine if Job Work Category should be shown
   const showJobWorkCategory = form.material_type === "Job Work";
 
   return (
@@ -386,15 +445,17 @@ export default function MaterialForm({
     >
       <div style={formRowStyle}>
         <label style={labelStyle}>
-          Part Number
+          Part Number <span style={asteriskStyle}>*</span>
           <input
             name="part_number"
-            value={form.part_number || ""}
-            style={inputStyle}
-            readOnly
-            placeholder="Auto-generated"
-            title="Auto-generated when saving"
+            value={form.part_number}
+            onChange={handleChange}
+            style={getInputStyle("part_number")}
+            required
+            placeholder="Enter Part Number"
+            maxLength="50"
           />
+          {errors.part_number && <div style={errorMessageStyle}>{errors.part_number}</div>}
         </label>
 
         <label style={labelStyle}>
@@ -632,7 +693,6 @@ export default function MaterialForm({
         </label>
       </div>
 
-      {/* Buttons */}
       <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "16px" }}>
         <button
           type="submit"
