@@ -3,15 +3,35 @@ const router = express.Router();
 const db = require("../config/db");
 
 /**
- * GET pending GRNs
+ * Helper: smart bin selection (least‑filled first)
  */
+function findBestBin(bins, qty) {
+  const suitable = bins.filter(
+    (bin) => bin.capacity - bin.current_usage >= qty,
+  );
+  if (suitable.length === 0) return null;
+  suitable.sort((a, b) => a.current_usage - b.current_usage);
+  return suitable[0];
+}
+
+/* ==========================================
+   GET PENDING GRNs (with QC summary)
+   ========================================== */
 router.get("/pending", async (req, res) => {
   try {
-    const [rows] = await db.execute(
-      `SELECT id, grn_no, warehouse_id, received_date, total_items, status
-       FROM grn
-       WHERE status = 'pending'
-       ORDER BY received_date DESC`,
+    const [rows] = await db.query(
+      `SELECT g.id, g.grn_no, g.warehouse_id, g.po_id, g.received_date,
+              g.total_items, g.status,
+              po.po_no AS po_no,
+              COUNT(gi.id) AS item_count,
+              SUM(CASE WHEN gi.qc_status = 'accepted' THEN 1 ELSE 0 END) AS accepted_count,
+              SUM(CASE WHEN gi.qc_status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count
+       FROM grn g
+       LEFT JOIN creation1_db.purchase_orders po ON g.po_id = po.id
+       LEFT JOIN grn_items gi ON gi.grn_id = g.id
+       WHERE g.status = 'pending'
+       GROUP BY g.id
+       ORDER BY g.received_date DESC`,
     );
     res.json(rows);
   } catch (err) {
@@ -20,36 +40,102 @@ router.get("/pending", async (req, res) => {
   }
 });
 
-/**
- * CREATE GRN
- */
-// ... imports and other routes remain unchanged
+/* ==========================================
+   GET OPEN PURCHASE ORDERS (from MM Creation)
+   ========================================== */
+router.get("/purchase-orders", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, po_no, po_date, vendor_id, status
+       FROM creation1_db.purchase_orders
+       WHERE status = 'OPEN'
+       ORDER BY po_date DESC`,
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("PO list error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
+/* ==========================================
+   GET PO ITEMS (via Integration Hub mapping)
+   ========================================== */
+router.get("/po/:poId/items", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT
+         pi.id,
+         pi.batch_no,
+         pi.qty,
+         pi.expiry_date,
+         m.part_name AS material_name,
+         m.part_number,
+         m.uom,
+         m.shelf_life_days,
+         COALESCE(map.warehouse_id, 0) AS material_id
+       FROM creation1_db.po_items pi
+       JOIN creation1_db.materials m ON pi.material_id = m.id
+       LEFT JOIN integration_hub.material_mapping map 
+              ON map.mm_creation_id = m.id
+       WHERE pi.po_id = ?`,
+      [req.params.poId],
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("PO items error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ==========================================
+   GET GRN ITEMS (for QC modal)
+   ========================================== */
+router.get("/:id/items", async (req, res) => {
+  try {
+    const [items] = await db.query(
+      `SELECT gi.*, i.name AS part_name, i.sku AS part_number, i.unit AS uom
+       FROM grn_items gi
+       JOIN items i ON gi.item_id = i.id
+       WHERE gi.grn_id = ?`,
+      [req.params.id],
+    );
+    res.json(items);
+  } catch (err) {
+    console.error("GRN items error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ==========================================
+   CREATE GRN
+   ========================================== */
 router.post("/", async (req, res) => {
-  const { grn_no, warehouse_id, received_date, items } = req.body;
-
+  const { grn_no, warehouse_id, received_date, po_id, items } = req.body;
   const connection = await db.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    // 1. Compute total_items from the items array
     const totalItems = items.reduce((sum, i) => sum + i.qty_received, 0);
-
-    // 2. Create GRN header
     const [grnResult] = await connection.query(
-      `INSERT INTO grn (grn_no, warehouse_id, received_date, total_items, status)
-       VALUES (?, ?, ?, ?, 'pending')`,
-      [grn_no, warehouse_id, received_date, totalItems],
+      `INSERT INTO grn (grn_no, warehouse_id, po_id, received_date, total_items, status)
+       VALUES (?, ?, ?, ?, ?, 'pending')`,
+      [grn_no, warehouse_id, po_id || null, received_date, totalItems],
     );
     const grnId = grnResult.insertId;
 
-    // 3. Insert each GRN item into grn_items
     for (const item of items) {
       await connection.query(
-        `INSERT INTO grn_items (grn_id, item_id, qty_received, expiry_date)
-     VALUES (?, ?, ?, ?)`,
-        [grnId, item.item_id, item.qty_received, item.expiry_date || null],
+        `INSERT INTO grn_items (grn_id, item_id, batch_no, expiry_date, qty_received, qc_status)
+         VALUES (?, ?, ?, ?, ?, 'pending')`,
+        [
+          grnId,
+          item.item_id,
+          item.batch_no || null,
+          item.expiry_date || null,
+          item.qty_received,
+        ],
       );
     }
 
@@ -64,25 +150,45 @@ router.post("/", async (req, res) => {
   }
 });
 
-/**
- * Smart bin selection:
- * - Must have enough free space (capacity - current_usage >= qty)
- * - Choose the bin with the smallest current usage (least filled)
- */
-function findBestBin(bins, qty) {
-  const suitable = bins.filter(
-    (bin) => bin.capacity - bin.current_usage >= qty,
-  );
-  if (suitable.length === 0) return null;
-  suitable.sort((a, b) => a.current_usage - b.current_usage);
-  return suitable[0];
-}
+/* ==========================================
+   QC – save acceptance/rejection decisions
+   ========================================== */
+router.put("/:id/qc", async (req, res) => {
+  const { grnId, items } = req.body;
+  const connection = await db.getConnection();
 
-// ... putaway route remains unchanged
+  try {
+    await connection.beginTransaction();
 
-/**
- * PUTAWAY – SMART BIN ALLOCATION
- */
+    for (const item of items) {
+      await connection.query(
+        `UPDATE grn_items
+         SET qc_status = ?, accepted_qty = ?, rejected_qty = ?, qc_remarks = ?, qc_date = NOW()
+         WHERE id = ?`,
+        [
+          item.qc_status,
+          item.accepted_qty || null,
+          item.rejected_qty || null,
+          item.qc_remarks || null,
+          item.id,
+        ],
+      );
+    }
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (err) {
+    await connection.rollback();
+    console.error("QC error:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
+  }
+});
+
+/* ==========================================
+   PUTAWAY – only accepted items, smart bin allocation
+   ========================================== */
 router.put("/:id/putaway", async (req, res) => {
   const grnId = req.params.id;
   const connection = await db.getConnection();
@@ -90,7 +196,6 @@ router.put("/:id/putaway", async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Get GRN
     const [[grn]] = await connection.query("SELECT * FROM grn WHERE id = ?", [
       grnId,
     ]);
@@ -99,17 +204,15 @@ router.put("/:id/putaway", async (req, res) => {
       return res.status(404).json({ error: "GRN not found" });
     }
 
-    // 2. Get GRN items
     const [items] = await connection.query(
-      "SELECT * FROM grn_items WHERE grn_id = ?",
+      "SELECT * FROM grn_items WHERE grn_id = ? AND qc_status = 'accepted'",
       [grnId],
     );
     if (!items.length) {
       await connection.rollback();
-      return res.status(400).json({ error: "No GRN items found" });
+      return res.status(400).json({ error: "No accepted items to put away" });
     }
 
-    // 3. Get bins for the warehouse (already sorted by current_usage ASC is good)
     const [bins] = await connection.query(
       "SELECT * FROM bins WHERE warehouse_id = ? ORDER BY current_usage ASC",
       [grn.warehouse_id],
@@ -119,45 +222,43 @@ router.put("/:id/putaway", async (req, res) => {
       return res.status(400).json({ error: "No bins in warehouse" });
     }
 
-    // 4. Smart allocation
     for (const item of items) {
-      const bin = findBestBin(bins, item.qty_received);
-
+      const qtyToStore = item.accepted_qty ?? item.qty_received;
+      const bin = findBestBin(bins, qtyToStore);
       if (!bin) {
         throw new Error(
-          `Not enough space in any bin for item ${item.item_id} (needs ${item.qty_received})`,
+          `Not enough space in any bin for item ${item.item_id} (need ${qtyToStore})`,
         );
       }
 
-      // Insert into inventory
       await connection.query(
-        `INSERT INTO inventory (item_id, bin_id, qty, expiry_date) VALUES (?, ?, ?, ?)`,
-        [item.item_id, bin.id, item.qty_received, item.expiry_date], // item.expiry_date comes from grn_items
+        `INSERT INTO inventory (item_id, bin_id, qty, batch_no, expiry_date)
+         VALUES (?, ?, ?, ?, ?)`,
+        [item.item_id, bin.id, qtyToStore, item.batch_no, item.expiry_date],
       );
 
-      // Update bin usage in database
       await connection.query(
         `UPDATE bins SET current_usage = current_usage + ? WHERE id = ?`,
-        [item.qty_received, bin.id],
+        [qtyToStore, bin.id],
       );
 
-      // Update GRN item with assigned bin
       await connection.query(
         `UPDATE grn_items SET assigned_bin_id = ?, putaway_time = NOW() WHERE id = ?`,
         [bin.id, item.id],
       );
 
-      // Reflect the change in our local bins array (so next items see updated capacity)
-      bin.current_usage += item.qty_received;
+      bin.current_usage += qtyToStore;
     }
 
-    // 5. Mark GRN as complete
     await connection.query(
       `UPDATE grn SET status = 'complete', putaway_date = NOW() WHERE id = ?`,
       [grnId],
     );
 
     await connection.commit();
+
+    // Optional: stock sync webhook can be added here if needed
+
     res.json({ message: "Putaway completed successfully", grn_id: grnId });
   } catch (err) {
     await connection.rollback();
