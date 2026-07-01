@@ -25,9 +25,9 @@ async function initDB() {
 
     
 
-    password: "root123",
+    password: "Anson.0983",
 
-    database: "integration_hub_db",
+    database: "integration_hub",
   });
   console.log("✅ Integration Hub DB connected");
 }

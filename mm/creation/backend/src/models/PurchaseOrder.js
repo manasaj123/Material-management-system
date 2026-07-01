@@ -28,12 +28,29 @@ export const PurchaseOrder = {
   },
 
   createItem(item, poId) {
-    const { material_id, qty, price, tax_percent, delivery_date } = item;
+    const {
+      material_id,
+      batch_no,
+      qty,
+      price,
+      tax_percent,
+      expiry_date,
+      delivery_date,
+    } = item;
     return db.query(
       `INSERT INTO po_items
-       (po_id, material_id, qty, price, tax_percent, delivery_date)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [poId, material_id, qty, price, tax_percent || 0, delivery_date],
+       (po_id, material_id, batch_no, qty, price, tax_percent, expiry_date, delivery_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        poId,
+        material_id,
+        batch_no || null,
+        qty,
+        price,
+        tax_percent || 0,
+        expiry_date || null,
+        delivery_date || null,
+      ],
     );
   },
 
@@ -47,7 +64,8 @@ export const PurchaseOrder = {
          IFNULL(po.freight_charges, 0) AS freight_charges,
          IFNULL(SUM(pi.qty * pi.price), 0) + 
          IFNULL(SUM(pi.qty * pi.price * pi.tax_percent / 100), 0) + 
-         IFNULL(po.freight_charges, 0) AS gross_amount
+         IFNULL(po.freight_charges, 0) AS gross_amount,
+         COUNT(DISTINCT pi.batch_no) AS batch_count
        FROM purchase_orders po
        LEFT JOIN vendors v ON po.vendor_id = v.id
        LEFT JOIN po_items pi ON po.id = pi.po_id
@@ -68,7 +86,11 @@ export const PurchaseOrder = {
 
   findItems(id) {
     return db.query(
-      `SELECT pi.*, m.name AS material_name, m.uom
+      `SELECT pi.*,
+              m.part_name AS material_name,
+              m.part_number AS sku,
+              m.uom,
+              m.shelf_life_days AS expiry_days
        FROM po_items pi
        LEFT JOIN materials m ON pi.material_id = m.id
        WHERE pi.po_id = ?`,
