@@ -192,22 +192,59 @@ const GrnPage = () => {
   };
 
   const saveQC = async () => {
+    // Validate each item
+    for (const it of qcItems) {
+      const qtyReceived = Number(it.qty_received) || 0;
+      const acceptedQty = Number(it.accepted_qty) || 0;
+      const rejectedQty = Number(it.rejected_qty) || 0;
+      const total = acceptedQty + rejectedQty;
+
+      if (it.qc_status === "pending") {
+        alert(
+          `❌ Please set a decision (Accept/Reject) for all items before saving.`,
+        );
+        return;
+      }
+
+      if (it.qc_status === "accepted" && acceptedQty <= 0) {
+        alert(
+          `❌ Accepted quantity must be greater than 0 for accepted items.`,
+        );
+        return;
+      }
+
+      if (it.qc_status === "rejected" && rejectedQty <= 0) {
+        alert(
+          `❌ Rejected quantity must be greater than 0 for rejected items.`,
+        );
+        return;
+      }
+
+      if (total !== qtyReceived) {
+        alert(
+          `❌ Accepted (${acceptedQty}) + Rejected (${rejectedQty}) = ${total}, but must equal Received Qty (${qtyReceived}).`,
+        );
+        return;
+      }
+    }
+
     try {
-      await axiosClient.put(`/grn/${qcGRN.id}/qc`, {
+      const payload = {
         grnId: qcGRN.id,
         items: qcItems.map((it) => ({
           id: it.id,
           qc_status: it.qc_status,
-          accepted_qty: it.accepted_qty,
-          rejected_qty: it.rejected_qty,
+          accepted_qty: Number(it.accepted_qty),
+          rejected_qty: Number(it.rejected_qty),
           qc_remarks: it.qc_remarks,
         })),
-      });
-      alert("QC saved");
+      };
+      await axiosClient.put(`/grn/${qcGRN.id}/qc`, payload);
+      alert("✅ QC saved successfully!");
       setQcGRN(null);
       loadGrns();
     } catch (err) {
-      alert("QC failed: " + (err.response?.data?.error || err.message));
+      alert("❌ QC failed: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -532,16 +569,16 @@ const GrnPage = () => {
                       <select
                         value={it.qc_status}
                         onChange={(e) => {
-                          const n = [...qcItems];
-                          n[idx].qc_status = e.target.value;
+                          const newItems = [...qcItems];
+                          newItems[idx].qc_status = e.target.value;
                           if (e.target.value === "accepted") {
-                            n[idx].accepted_qty = it.qty_received;
-                            n[idx].rejected_qty = 0;
+                            newItems[idx].accepted_qty = it.qty_received;
+                            newItems[idx].rejected_qty = 0;
                           } else if (e.target.value === "rejected") {
-                            n[idx].rejected_qty = it.qty_received;
-                            n[idx].accepted_qty = 0;
+                            newItems[idx].rejected_qty = it.qty_received;
+                            newItems[idx].accepted_qty = 0;
                           }
-                          setQcItems(n);
+                          setQcItems(newItems);
                         }}
                       >
                         <option value="pending">Pending</option>

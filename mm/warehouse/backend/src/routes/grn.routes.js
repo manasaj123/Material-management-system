@@ -161,14 +161,38 @@ router.put("/:id/qc", async (req, res) => {
     await connection.beginTransaction();
 
     for (const item of items) {
+      // Fetch the original qty_received
+      const [[original]] = await connection.query(
+        "SELECT qty_received FROM grn_items WHERE id = ?",
+        [item.id],
+      );
+
+      if (!original) {
+        throw new Error(`GRN item ${item.id} not found`);
+      }
+
+      const qtyReceived = Number(original.qty_received);
+      const acceptedQty = Number(item.accepted_qty) || 0;
+      const rejectedQty = Number(item.rejected_qty) || 0;
+
+      // Validate: accepted + rejected = qty_received
+      if (item.qc_status === "accepted" || item.qc_status === "rejected") {
+        if (acceptedQty + rejectedQty !== qtyReceived) {
+          await connection.rollback();
+          return res.status(400).json({
+            error: `Item ${item.id}: Accepted (${acceptedQty}) + Rejected (${rejectedQty}) must equal Received Qty (${qtyReceived})`,
+          });
+        }
+      }
+
       await connection.query(
         `UPDATE grn_items
          SET qc_status = ?, accepted_qty = ?, rejected_qty = ?, qc_remarks = ?, qc_date = NOW()
          WHERE id = ?`,
         [
           item.qc_status,
-          item.accepted_qty || null,
-          item.rejected_qty || null,
+          acceptedQty,
+          rejectedQty,
           item.qc_remarks || null,
           item.id,
         ],
