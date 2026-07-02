@@ -3,11 +3,7 @@ const mysql = require("mysql2");
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-<<<<<<< Updated upstream
-  password: "root",
-=======
-  password: "root123",
->>>>>>> Stashed changes
+  password: "Anson.0983",
   database: "inspection_db",
 
   waitForConnections: true,
